@@ -14,6 +14,15 @@ class GameEngine:
         self.width = width
         self.height = height
 
+        # --- Task 4: Sound Initialization ---
+        pygame.mixer.init()
+        try:
+            self.sfx_bounce = pygame.mixer.Sound('bounce.wav')
+            self.sfx_win = pygame.mixer.Sound('win.wav')
+            self.sfx_lose = pygame.mixer.Sound('lose.wav')
+        except:
+            self.sfx_bounce = self.sfx_win = self.sfx_lose = None
+
         self.marble = Marble(50, 50)
         self.tilt_strength = 0.6
         self.friction = 0.02
@@ -48,6 +57,7 @@ class GameEngine:
         return walls
 
     def handle_event(self, event):
+        # --- Task 3: Replay Handling ---
         if self.game_over and event.type == pygame.KEYDOWN:
             if event.key == pygame.K_1:
                 self.reset(easy=True)
@@ -91,6 +101,8 @@ class GameEngine:
         if elapsed >= self.time_limit_ms:
             self.game_over = True
             self.result = "timeout"
+            # --- Task 4: Trigger Lose Sound ---
+            if self.sfx_lose: self.sfx_lose.play()
             return
 
         self.marble.vx *= (1 - self.friction)
@@ -113,8 +125,11 @@ class GameEngine:
             self.game_over = True
             self.result = "solved"
             self.finish_time_ms = elapsed
+            # --- Task 4: Trigger Win Sound ---
+            if self.sfx_win: self.sfx_win.play()
 
-def _resolve_wall_collisions(self):
+    def _resolve_wall_collisions(self):
+        # --- Task 1: Refined Circle Collision ---
         for wall in self.walls:
             wall_rect = wall.rect()
             
@@ -134,6 +149,10 @@ def _resolve_wall_collisions(self):
                 overlap = self.marble.radius - distance
                 self.marble.x += (dx / distance) * overlap
                 self.marble.y += (dy / distance) * overlap
+                
+                # --- Task 4: Trigger Bounce Sound ---
+                if self.sfx_bounce and (abs(self.marble.vx) > 0.5 or abs(self.marble.vy) > 0.5):
+                    self.sfx_bounce.play()
                 
                 # Reflect velocity
                 if closest_x == wall_rect.left or closest_x == wall_rect.right:
@@ -155,7 +174,7 @@ def _resolve_wall_collisions(self):
         timer_text = self.font.render(f"Time: {seconds_left}s", True, WHITE)
         screen.blit(timer_text, (10, 10))
 
-        # NEW GAME OVER BLOCK
+        # --- Task 2 & 3: Game Over Block & Replay Text ---
         if self.game_over:
             # 1. Semi-transparent overlay
             overlay = pygame.Surface((self.width, self.height))
