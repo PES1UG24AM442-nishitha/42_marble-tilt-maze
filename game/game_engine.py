@@ -96,34 +96,31 @@ class GameEngine:
             self.result = "solved"
             self.finish_time_ms = elapsed
 
-    def _resolve_wall_collisions(self):
+def _resolve_wall_collisions(self):
         for wall in self.walls:
-            marble_rect = self.marble.rect()
             wall_rect = wall.rect()
-
-            # NOTE: this checks a simple bounding-box overlap
-            # (colliderect) between the marble's square bounding box
-            # and the wall, instead of a true circle-vs-rectangle
-            # distance test. Near a wall's corner, the marble's
-            # bounding square can overlap the wall rect well before
-            # the actual round marble visually touches it, causing an
-            # early "phantom" bounce off empty space right next to
-            # corners. See Task 1 in the README.
-            if marble_rect.colliderect(wall_rect):
-                overlap_x = min(marble_rect.right, wall_rect.right) - max(marble_rect.left, wall_rect.left)
-                overlap_y = min(marble_rect.bottom, wall_rect.bottom) - max(marble_rect.top, wall_rect.top)
-
-                if overlap_x < overlap_y:
-                    if self.marble.x < wall_rect.centerx:
-                        self.marble.x -= overlap_x
-                    else:
-                        self.marble.x += overlap_x
+            
+            # Find the closest point on the rectangle to the circle's center
+            closest_x = max(wall_rect.left, min(self.marble.x, wall_rect.right))
+            closest_y = max(wall_rect.top, min(self.marble.y, wall_rect.bottom))
+            
+            # Calculate distance between center and the closest point
+            dx = self.marble.x - closest_x
+            dy = self.marble.y - closest_y
+            distance = (dx ** 2 + dy ** 2) ** 0.5
+            
+            if distance < self.marble.radius:
+                if distance == 0: # Prevent division by zero
+                    dx, dy, distance = 1, 0, 1
+                    
+                overlap = self.marble.radius - distance
+                self.marble.x += (dx / distance) * overlap
+                self.marble.y += (dy / distance) * overlap
+                
+                # Reflect velocity
+                if closest_x == wall_rect.left or closest_x == wall_rect.right:
                     self.marble.vx *= -0.3
                 else:
-                    if self.marble.y < wall_rect.centery:
-                        self.marble.y -= overlap_y
-                    else:
-                        self.marble.y += overlap_y
                     self.marble.vy *= -0.3
 
     def render(self, screen):
