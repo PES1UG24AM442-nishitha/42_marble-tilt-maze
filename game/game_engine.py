@@ -48,9 +48,27 @@ class GameEngine:
         return walls
 
     def handle_event(self, event):
-        # This game is driven entirely by the continuous mouse
-        # position, handled in handle_input each frame.
-        pass
+        if self.game_over and event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_1:
+                self.reset(easy=True)
+            elif event.key == pygame.K_2:
+                self.reset(med=True)
+            elif event.key == pygame.K_3:
+                self.reset(hard=True)
+
+    def reset(self, easy=False, med=False, hard=False):
+        self.marble.x, self.marble.y = 50, 50
+        self.marble.vx, self.marble.vy = 0, 0
+        self.game_over = False
+        self.result = None
+        self.start_ticks = pygame.time.get_ticks()
+        
+        if easy:
+            self.tilt_strength, self.friction, self.time_limit_ms = 0.8, 0.04, 60000
+        elif med:
+            self.tilt_strength, self.friction, self.time_limit_ms = 0.6, 0.02, 45000
+        elif hard:
+            self.tilt_strength, self.friction, self.time_limit_ms = 0.4, 0.01, 30000
 
     def handle_input(self):
         if self.game_over:
@@ -144,3 +162,6 @@ def _resolve_wall_collisions(self):
             else:
                 print("Time's up! Maze not solved.")
             self._game_over_logged = True
+
+        replay_text = self.font.render("Press 1 (Easy), 2 (Med), 3 (Hard) to Replay", True, WHITE)
+        screen.blit(replay_text, (self.width // 2 - replay_text.get_width() // 2, self.height // 2 + 20))
