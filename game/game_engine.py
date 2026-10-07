@@ -155,13 +155,25 @@ def _resolve_wall_collisions(self):
         timer_text = self.font.render(f"Time: {seconds_left}s", True, WHITE)
         screen.blit(timer_text, (10, 10))
 
-        if self.game_over and not getattr(self, "_game_over_logged", False):
-            # NOTE: no proper end screen yet - see Task 2 in the README.
+        # NEW GAME OVER BLOCK
+        if self.game_over:
+            # 1. Semi-transparent overlay
+            overlay = pygame.Surface((self.width, self.height))
+            overlay.set_alpha(180)
+            overlay.fill((0, 0, 0))
+            screen.blit(overlay, (0, 0))
+            
+            # 2. Main Game Over Message
             if self.result == "solved":
-                print(f"Solved! Finished in {self.finish_time_ms / 1000:.1f}s")
+                msg = f"Solved in {self.finish_time_ms / 1000:.1f}s!"
+                color = GOAL_COLOR
             else:
-                print("Time's up! Maze not solved.")
-            self._game_over_logged = True
-
-        replay_text = self.font.render("Press 1 (Easy), 2 (Med), 3 (Hard) to Replay", True, WHITE)
-        screen.blit(replay_text, (self.width // 2 - replay_text.get_width() // 2, self.height // 2 + 20))
+                msg = "Time's up!"
+                color = (255, 100, 100)
+                
+            text = self.font.render(msg, True, color)
+            screen.blit(text, (self.width // 2 - text.get_width() // 2, self.height // 2 - 20))
+            
+            # 3. Replay instructions
+            replay_text = self.font.render("Press 1 (Easy), 2 (Med), 3 (Hard) to Replay", True, WHITE)
+            screen.blit(replay_text, (self.width // 2 - replay_text.get_width() // 2, self.height // 2 + 20))
